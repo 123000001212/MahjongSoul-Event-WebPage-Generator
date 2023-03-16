@@ -1,0 +1,499 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <script src="https://cdn.jsdelivr.net/npm/vue@2.5.16/dist/vue.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/echarts@5.4.0/dist/echarts.min.js"></script>
+    <!-- 引入样式 -->
+    <link rel="stylesheet" href="https://unpkg.zhimg.com/element-ui@2.15.10/lib/theme-chalk/index.css">
+    <!-- 引入组件库 -->
+    <script src="https://unpkg.zhimg.com/element-ui@2.15.10/lib/index.js"></script>
+    <title>DL</title>
+</head>
+<body>
+    <div id="app" class="app">
+    <h4 class="MuiTypography-root MuiTypography-h4 css-z2oei0" style="margin-bottom: 32px;margin-top: 32px;">第一届立直麻将超级联赛（常规赛）</h4>
+    <h4 class="MuiTypography-root MuiTypography-h4 css-z2oei0" style="font-size: 10px;margin-bottom: 8px;">数据更新时间：{{update_time}}</h4>
+
+    <el-tabs v-model="activeName" @tab-click="handleClick">
+        <!--队伍排行-->
+            <el-tab-pane label="队伍排行" name="second">
+                <el-table
+                :data="teamData"
+                highlight-current-row
+                style="width: 100%"
+                :default-sort = "{prop: 'score', order: 'descending'}">
+                <el-table-column
+                type="index"
+                width="100">
+                </el-table-column>
+                <el-table-column
+                  prop="name"
+                  label="队伍名称"
+                  sortable
+                  width="200">
+                </el-table-column>
+                <el-table-column
+                  prop="score"
+                  label="总得分"
+                  sortable
+                  width="150">
+                </el-table-column>
+              </el-table>
+            </el-tab-pane>
+        <!--选手排行-->
+            <el-tab-pane label="选手排行" name="third">
+                <el-table
+                :data="playerData"
+                highlight-current-row
+                style="width: 100%"
+                :default-sort = "{prop: 'score', order: 'descending'}">
+                <el-table-column
+                type="index"
+                width="50">
+                </el-table-column>
+                <el-table-column
+                  prop="name"
+                  label="选手名称"
+                  sortable
+                  align="center"
+                  width="150">
+                <template slot-scope="scope">
+                    <el-link @click=clickplayer(scope.row.id) target="_blank" style="font-size: 15px;">{{scope.row.name}}</el-link>
+                </template>
+                </el-table-column>
+                <el-table-column
+                prop="team"
+                label="队伍"
+                sortable
+                align="center"
+                width="150">
+              </el-table-column>
+                <el-table-column
+                  prop="score"
+                  label="总得分"
+                  sortable
+                  align="center"
+                  width="100">
+                </el-table-column>
+                <el-table-column
+                  prop="cccs"
+                  label="出场次数"
+                  sortable
+                  :sort-method="(a,b)=>{return a.cccs - b.cccs}"
+                  align="center"
+                  width="100">
+                </el-table-column>
+                <el-table-column
+                  prop="hpl"
+                  label="胡牌率"
+                  :sort-method="(a,b)=>{return a.hpl - b.hpl}"
+                  sortable
+                  align="center"
+                  width="90">
+                  <template slot-scope="scope">
+                    {{ scope.row.hpl }}%
+                  </template>
+                </el-table-column>
+                <el-table-column
+                  prop="fcl"
+                  label="放铳率"
+                  :sort-method="(a,b)=>{return a.fcl - b.fcl}"
+                  sortable
+                  align="center"
+                  width="90">
+                  <template slot-scope="scope">
+                    {{ scope.row.fcl }}%
+                  </template>
+                </el-table-column>
+                <el-table-column
+                  prop="lzl"
+                  label="立直率"
+                  :sort-method="(a,b)=>{return a.lzl - b.lzl}"
+                  sortable
+                  align="center"
+                  width="90">
+                  <template slot-scope="scope">
+                    {{ scope.row.lzl }}%
+                  </template>
+                </el-table-column>
+                <el-table-column
+                  prop="fll"
+                  label="副露率"
+                  :sort-method="(a,b)=>{return a.fll - b.fll}"
+                  sortable
+                  align="center"
+                  width="90">
+                  <template slot-scope="scope">
+                    {{ scope.row.fll }}%
+                  </template>
+                </el-table-column>
+                <el-table-column
+                  prop="zml"
+                  label="自摸率"
+                  :sort-method="(a,b)=>{return a.zml - b.zml}"
+                  sortable
+                  align="center"
+                  width="90">
+                  <template slot-scope="scope">
+                    {{ scope.row.zml }}%
+                  </template>
+                </el-table-column>
+                <el-table-column
+                  prop="pjsw"
+                  label="平均顺位"
+                  :sort-method="(a,b)=>{return a.pjsw - b.pjsw}"
+                  sortable
+                  align="center"
+                  width="100">
+                </el-table-column>
+              </el-table>
+            </el-tab-pane>
+        <!--比赛章程-->
+            <el-tab-pane label="比赛章程" name="fourth">立直麻将超级联赛规则<br/>一、基础规则 （赛事 ID：437118）<br/>第 1 条 开始时间<br/>比赛时间为每个比赛日晚上 20:00，每晚进行 2 半庄，第一个半庄结束 30 分钟以内开始第二半庄比赛。<br/><br/>第 2 条 座位与原点<br/>四位参赛选手进入比赛场准备后，后台工作人员以雀魂随机座位方式开赛。对局开始时， 每位选手持有 25000 点，此为原点。南 4 结束时若有人持点达到 30000 点，当局比赛结束进行结算，若 4 家点数都未达到 30000 点时进入西风场。<br/><br/>第 3 条 持点、顺位点<br/>1. 持点超过 30,000 点以上的部分计为正分，不足的部分计为负分（-）。<br/><br/>2. 竞技顺位由半庄结束时合计得点的多少决定。<br/><br/>3. 顺位点指以半庄为单位，根据竞技顺位进行的分数加减。在本规则中，以以下方式<br/><br/>表示：<br/><br/>1 位+50,000 点 2 位+10,000 点 3 位-10,000 点 4 位-30,000 点<br/><br/>4. 持点与顺位点一同以 1000 点=1p 的比率进行换算，并统计为最终成绩。<br/><br/>【例】32,600 点的 2 位→+2.6p+10.0p（顺位点）=+12.6p<br/><br/>40,500 点的 1 位→+10.5p+50.0p（顺位点）=+60.5p<br/><br/>在此规则下，雀魂比赛场设置马点为 +45 +5 -15 -35。<br/><br/>半庄以流局结束时，场上的立直棒归 TOP 所有。<br/><br/>5. 半庄结束时若有多名玩家同点，则顺位点平分。3 人同点时，若顺位点无法整除， 则离起家最近的 1 人取较大余数。流局结束时的立直棒由同点者均分。3 人同点时， 1 根立直棒分为 400、300、300，由离起家最近的 1 人取 400。当立直棒点数无法 整除时，由此比例等倍计算。（例如立直棒有 2000 点时，分为 800、600、600）<br/><br/>【注】由于雀魂比赛场设定无法满足上述要求，当同分情况发生时按照上述计算方 式进行分数更正。<br/><br/>第 4 条 比赛场规则<br/>本届比赛全程采用以下规则：<br/><br/>1. 有提示（有便捷提示、有听牌提示）；<br/><br/>2. 无击飞（比赛中有选手负分时比赛继续，负分选手可正常立直）；<br/><br/>3. 有食断，赤宝牌 3 枚，5 万、5 筒、5 索各一张为赤牌；<br/><br/>4. 无途中流局（无九种九牌流局、无四风连打流局、无四杠散了流局、无四家立直流局）；<br/><br/>5. 加杠、大明杠，杠表宝牌即开；<br/><br/>6. 有流局满贯，有切上满贯（60 符 3 翻、30 符 4 翻 计切上满贯）；<br/><br/>7. 有一发，有头跳（某一张牌打出后，有多家进行和牌时，按照放铳者的下家、对家、上家之顺序优先和牌）；<br/><br/>8. 听牌罚符总计为 3000 点；<br/><br/>9. 顺位马为 1 位+45，2 位+5，三位-15，四位-35；<br/><br/>10. 有西入（南 4 结束后若 4 家点数都未超过 30000 时进入西 1 局，，从西 1 局开始只要非亲家点数超过 30000 时结束整局进行结算；若西 4 结束还没人满 30000 点，直接进行结算。）<br/><br/>11. 亲家和牌或听牌时连庄（包括南 4、西入亲家为 TOP 时，受限于雀魂规则，当选手听牌时不能盖牌下庄）；<br/><br/>12. 有多倍役满，有累计役满，有复合役满。<br/><br/>13. 长考时间为20+5秒<br/><br/>第 5 条 对局<br/>1. 选手有义务遵守本规则并保证公平竞争。<br/><br/>2. 如果在比赛中出现任何疑问，裁判应作出裁决，选手必须遵守该裁决。<br/><br/>3. 选手可以就对局中的任何疑问当场向裁判提出申诉，申述期限 3 天，过时无效。<br/><br/>第 6 条 裁判<br/>1. 由 RML 指定对麻将对局具备相关专业经验与知识的人才担任裁判。<br/><br/>2. 裁判具有执行竞赛规则并控制竞赛的义务。<br/><br/>3. 裁判在竞赛规则的范围内的内容拥有所有最终解释权，是比赛中任何疑问的最终仲裁者。在出现比赛规则范围之外的不可预见的情况时，裁判也有同样的权限。<br/><br/>4. 裁判有权暂停、恢复或结束一场竞赛。<br/><br/>第 7 条 队员<br/>参赛队伍的构成需要男女队员至少各一名。<br/><br/>队伍中成员若遭遇不可抗力原因需要替换，则需要提前一周，由队长将信息提交至组委会。组委会批准后，立即公示更换请求及新队员名单，组委会成员表决通过后在一周内完成新选手的注册登记。<br/><br/>本赛事最终解释权归主办方所有。<br/><br/>二、赛程安排<br/>本届比赛分为常规赛、季后赛、总决赛三个阶段。<br/><br/>每周三、四、六、日，进行四轮比赛，每晚两个半庄。各队伍自由安排选手出战，每晚可出场 1~2 人。<br/><br/>半庄积分结算：（半庄得点+顺位点-精算原点）/1000， 精算原点为 25000，精确至小数点后 1 位。<br/><br/>同队 4 人积分总和即为队伍积分，每个赛段结束时，晋级队伍积分*0.5 作为下个赛段初始积分，向高分精确至小数点后 1 位。<br/><br/>常规赛： 2 月 4 日 至 4 月 12 日，常规赛阶段每队需要进行 40 半庄比赛，为期 10 周。常规结束后积分前六的队伍晋级季后赛。<br/><br/>季后赛： 4 月 15 日 至 4 月 23 日，季后赛阶段每队需要进行 12 半庄比赛，为期 2 周。季后赛积分前四队伍进行总决赛。<br/><br/>总决赛： 4 月 29 日 至 5 月 3 日，四支决赛队伍进行 8 半庄的总冠军争夺战。<br/><br/>在各阶段比赛中，选手出场数量需要满足以下要求：<br/><br/>常规赛阶段选手最少出场 8 半庄，最多出场 12 半庄；<br/><br/>季后赛阶段选手最少出场 2 半庄，最多出场 4 半庄；<br/><br/>总决赛阶段每位选手需出场 2 半庄。<br/><br/>三、奖励<br/>赛事奖励<br/>冠军<br/>奖金 50000 元，冠军奖杯，<br/>队伍成员三亚三日豪华游<br/>（包食宿机票）<br/>10W 辉玉，<br/>冠军称号（限时）<br/>亚军<br/>奖金 30000 元<br/>6W 辉玉<br/>季军<br/>奖金 15000 元<br/>3W 辉玉<br/>第四名<br/>奖金 8000 元<br/>1W6 辉玉<br/>第五名<br/>奖金 6000 元<br/>1W2 辉玉<br/>第六名<br/>奖金 6000 元<br/>1W2 辉玉<br/>第七名<br/>奖金 4000 元<br/>8K 辉玉<br/>第八名<br/>奖金 4000 元<br/>8K 辉玉<br/>特殊成就<br/>常规赛 MVP<br/>奖金 5000 元<br/>10W 辉玉<br/>总决赛 MVP<br/>奖金 5000 元<br/>10W 辉玉<br/>半庄最高打点<br/>奖金 3000 元<br/>/<br/>役满大赏<br/>奖金 500 元<br/>/<br/>立超联赛@2022-2023</el-tab-pane>
+        <!--比赛对局-->
+            <el-tab-pane label="比赛对局" name="fifth">
+                <el-table
+      :data="roundData"
+      style="width: 100%"
+      :default-sort = "{prop: 'date', order: 'descending'}">
+      <el-table-column
+        prop="date"
+        label="日期"
+        sortable
+        width="200">
+      </el-table-column>
+      <el-table-column
+        prop="result"
+        label="对局结果">
+      </el-table-column>
+      <el-table-column
+        prop="link"
+        label="对局链接"
+        width="100">
+        <template slot-scope="scope">
+            <el-link class="el-icon-share" :href="scope.row.link" target="_blank" style="font-size: 20px;"></el-link>
+        </template>
+      </el-table-column>
+    </el-table>
+            </el-tab-pane>
+    </el-tabs>
+
+
+
+<!--对话框显示player详细信息-->
+
+
+<el-dialog title=" " :visible.sync="dialogTableVisible">
+    <h4 class="MuiTypography-root MuiTypography-h4 css-z2oei0">{{dname}}</h4>
+    <h5 style="text-align: center;">{{tname}}</h5>
+    <h5 class="MuiTypography-root MuiTypography-h5 css-saabsf">统计数据</h5>
+    
+    <div id="main" ref="chart" style="width: 600px;height:220px; margin:auto;margin-top: 16px;"></div>
+
+    
+    <div class="MuiBox-root css-1u3q4k3">
+    <div class="MuiBox-root css-gg4vpm"><h6 class="MuiTypography-root MuiTypography-subtitle2 MuiTypography-noWrap css-lrbsr7">出场次数</h6>
+        <p class="MuiTypography-root MuiTypography-body2 MuiTypography-noWrap css-1oney6p" aria-label="">{{d0}}</p>
+    </div>
+    <div class="MuiBox-root css-gg4vpm"><h6 class="MuiTypography-root MuiTypography-subtitle2 MuiTypography-noWrap css-lrbsr7">总局数</h6>
+        <p class="MuiTypography-root MuiTypography-body2 MuiTypography-noWrap css-1oney6p" aria-label="">{{d1}}</p>
+    </div>
+    <div class="MuiBox-root css-gg4vpm"><h6 class="MuiTypography-root MuiTypography-subtitle2 MuiTypography-noWrap css-lrbsr7">总得点</h6>
+        <p class="MuiTypography-root MuiTypography-body2 MuiTypography-noWrap css-1oney6p" aria-label="">{{d2}}</p>
+    </div>
+    <div class="MuiBox-root css-gg4vpm"><h6 class="MuiTypography-root MuiTypography-subtitle2 MuiTypography-noWrap css-lrbsr7">和牌率</h6>
+        <p class="MuiTypography-root MuiTypography-body2 MuiTypography-noWrap css-1oney6p">{{d3}}</p>
+    </div>
+    <div class="MuiBox-root css-gg4vpm"><h6 class="MuiTypography-root MuiTypography-subtitle2 MuiTypography-noWrap css-lrbsr7">放铳率</h6>
+        <p class="MuiTypography-root MuiTypography-body2 MuiTypography-noWrap css-1oney6p">{{d4}}</p>
+    </div>
+    <div class="MuiBox-root css-gg4vpm"><h6 class="MuiTypography-root MuiTypography-subtitle2 MuiTypography-noWrap css-lrbsr7">自摸率</h6>
+        <p class="MuiTypography-root MuiTypography-body2 MuiTypography-noWrap css-1oney6p">{{d5}}</p>
+    </div>
+    <div class="MuiBox-root css-gg4vpm"><h6 class="MuiTypography-root MuiTypography-subtitle2 MuiTypography-noWrap css-lrbsr7">副露率</h6>
+        <p class="MuiTypography-root MuiTypography-body2 MuiTypography-noWrap css-1oney6p">{{d6}}</p>
+    </div>
+    <div class="MuiBox-root css-gg4vpm"><h6 class="MuiTypography-root MuiTypography-subtitle2 MuiTypography-noWrap css-lrbsr7">立直率</h6>
+        <p class="MuiTypography-root MuiTypography-body2 MuiTypography-noWrap css-1oney6p">{{d7}}</p>
+    </div>
+    <div class="MuiBox-root css-gg4vpm"><h6 class="MuiTypography-root MuiTypography-subtitle2 MuiTypography-noWrap css-lrbsr7">平均顺位</h6>
+        <p class="MuiTypography-root MuiTypography-body2 MuiTypography-noWrap css-1oney6p" aria-label="">{{d8}}</p>
+    </div>
+    </div>
+    
+    <h5 class="MuiTypography-root MuiTypography-h5 css-saabsf">对局记录</h5>
+    <div>
+        <el-table
+          :data="playerroundData"
+          highlight-current-row
+          style="width: 100%"
+          :default-sort = "{prop: 'date', order: 'descending'}">
+          <el-table-column
+            prop="date"
+            label="日期"
+            sortable
+            width="150">
+          </el-table-column>
+          <el-table-column
+            prop="place"
+            label="顺位"
+            sortable
+            width="100">
+          </el-table-column>
+          <el-table-column
+            prop="result"
+            label="对局结果">
+          </el-table-column>
+          <el-table-column
+            prop="link"
+            label="对局链接"
+            width="100">
+            <template slot-scope="scope">
+                <el-link class="el-icon-share" :href="scope.row.link" target="_blank" style="font-size: 20px;"></el-link>
+            </template>
+          </el-table-column>
+        </el-table>
+    </div>
+</el-dialog>
+</div>
+
+<script>
+    new Vue({
+        el: '#app',
+        data: function() {
+            return {
+                update_time: '2023-03-16 22:29:39',
+                teamData: [{name: '德云色腕豪',score: 680.6},{name: '初心',score: 251.2},{name: '飞龙',score: 52.3},{name: '七煌Keahoarl',score: -73.3},{name: '点苍',score: -111.7},{name: '竹芒',score: -178.3},{name: '右手第一张',score: -209.3},{name: '立直魔术师',score: -411.5},],
+                playerData: [{name: '四娃万岁',score: 269.1,team: '德云色腕豪',id:'0'},{name: '姜姜QAQ',score: 207.8,team: '德云色腕豪',id:'1'},{name: 'dys雀魂部部长',score: 117.2,team: '德云色腕豪',id:'2'},{name: '昏睡兔兔',score: 86.5,team: '德云色腕豪',id:'3'},{name: '嘉俊1220',score: 195.6,team: '初心',id:'4'},{name: '梦幻情怀',score: 137.5,team: '初心',id:'5'},{name: '白菜的可爱麻麻',score: 45.4,team: '初心',id:'6'},{name: '您的橘',score: -127.3,team: '初心',id:'7'},{name: '炮手酵母',score: 89.8,team: '飞龙',id:'8'},{name: '朝倉康心',score: 27.6,team: '飞龙',id:'9'},{name: '天才麻将杏杏',score: -10.0,team: '飞龙',id:'10'},{name: '逍遥散人',score: -55.1,team: '飞龙',id:'11'},{name: '佐仓沙耶加',score: 76.3,team: '七煌Keahoarl',id:'12'},{name: '越菜越要波',score: 15.2,team: '七煌Keahoarl',id:'13'},{name: 'C・A',score: -45.0,team: '七煌Keahoarl',id:'14'},{name: '悠雲葉月',score: -119.8,team: '七煌Keahoarl',id:'15'},{name: '熊米熊',score: 151.2,team: '点苍',id:'16'},{name: '吃货小飞飞',score: 6.2,team: '点苍',id:'17'},{name: '虎皮猫',score: -13.9,team: '点苍',id:'18'},{name: '抹茶冰淇淋红茶',score: -255.2,team: '点苍',id:'19'},{name: '狂狮周润发',score: -7.7,team: '竹芒',id:'20'},{name: 'pane',score: -21.5,team: '竹芒',id:'21'},{name: '火龙果说电影',score: -62.0,team: '竹芒',id:'22'},{name: '呆呆的彼尔德',score: -87.1,team: '竹芒',id:'23'},{name: '胡乱思维的猫',score: 165.3,team: '右手第一张',id:'24'},{name: '魔枪洛亚',score: -35.3,team: '右手第一张',id:'25'},{name: '唯有猫猫头',score: -120.9,team: '右手第一张',id:'26'},{name: '多肉动物',score: -218.4,team: '右手第一张',id:'27'},{name: '黒色叉腰大魔王',score: -13.2,team: '立直魔术师',id:'28'},{name: 'JK杀手',score: -109.7,team: '立直魔术师',id:'29'},{name: '日麻高启强',score: -116.5,team: '立直魔术师',id:'30'},{name: 'Hikaru',score: -172.1,team: '立直魔术师',id:'31'},{name: 'AI',score: 0.0,team: '电脑',id:'32'},],
+                roundData: [{date: '2023.02.04',result:'吃货小飞飞(52.9)， 魔枪洛亚(12.6)， 佐仓沙耶加(-7.6)， 逍遥散人(-57.9)',link:'https://game.maj-soul.net/1/?paipu=230204-205a0eff-143e-4c77-9a58-3331d09fed84'},{date: '2023.02.04',result:'吃货小飞飞(63.9)， 炮手酵母(7.3)， 魔枪洛亚(-20.0)， 佐仓沙耶加(-51.2)',link:'https://game.maj-soul.net/1/?paipu=230204-187bbe52-57c2-4365-bf7f-2d84864d2af5'},{date: '2023.02.05',result:'梦幻情怀(88.5)， 四娃万岁(7.3)， 火龙果说电影(-17.2)， JK杀手(-78.6)',link:'https://game.maj-soul.net/1/?paipu=230205-f9bfe75a-b475-4d5d-adf8-8aaad671cf23'},{date: '2023.02.05',result:'四娃万岁(61.1)， 狂狮周润发(9.3)， JK杀手(-11.7)， 白菜的可爱麻麻(-58.7)',link:'https://game.maj-soul.net/1/?paipu=230205-661bb9cd-8839-457d-8e58-6dd50bb31867'},{date: '2023.02.08',result:'C・A(53.8)， 黒色叉腰大魔王(11.4)， dys雀魂部部长(-19.0)， 嘉俊1220(-46.2)',link:'https://game.maj-soul.net/1/?paipu=230208-72691ba6-bd47-41dd-afcb-359d70fcfcd3'},{date: '2023.02.08',result:'悠雲葉月(52.7)， dys雀魂部部长(7.8)， 黒色叉腰大魔王(-15.4)， 您的橘(-45.1)',link:'https://game.maj-soul.net/1/?paipu=230208-70026688-842e-481b-98bd-be29b152fdd9'},{date: '2023.02.09',result:'熊米熊(87.2)， 呆呆的彼尔德(14.4)， 多肉动物(-38.8)， 天才麻将杏杏(-62.8)',link:'https://game.maj-soul.net/1/?paipu=230209-fdb8a9a5-35d7-4184-969b-8aac0d012104'},{date: '2023.02.09',result:'熊米熊(57.5)， 天才麻将杏杏(8.4)， 多肉动物(-15.0)， 呆呆的彼尔德(-50.9)',link:'https://game.maj-soul.net/1/?paipu=230209-ccfff382-12e4-4247-95f1-d9b7a62c8a3b'},{date: '2023.02.11',result:'虎皮猫(75.2)， 白菜的可爱麻麻(4.0)， 火龙果说电影(-17.0)， 越菜越要波(-62.2)',link:'https://game.maj-soul.net/1/?paipu=230211-647ca531-c239-4ccc-9076-2009ceaa7cd9'},{date: '2023.02.11',result:'白菜的可爱麻麻(66.8)， pane(18.2)， 虎皮猫(-21.2)， C・A(-63.8)',link:'https://game.maj-soul.net/1/?paipu=230211-25a02930-0f31-4b6b-b4e8-011ccf5db191'},{date: '2023.02.12',result:'日麻高启强(72.4)， 姜姜QAQ(18.7)， 炮手酵母(-33.4)， 唯有猫猫头(-57.7)',link:'https://game.maj-soul.net/1/?paipu=230212-c7d1cd1d-ba2a-4aeb-bcb1-b3c1d1469120'},{date: '2023.02.12',result:'炮手酵母(53.8)， 姜姜QAQ(6.1)， 日麻高启强(-14.5)， 唯有猫猫头(-45.4)',link:'https://game.maj-soul.net/1/?paipu=230212-1f041e59-bec8-4723-9682-a631eb39d0f0'},{date: '2023.02.15',result:'昏睡兔兔(55.9)， 逍遥散人(12.3)， C・A(-9.9)， 抹茶冰淇淋红茶(-58.3)',link:'https://game.maj-soul.net/1/?paipu=230215-078bb192-a5da-450f-96f4-0e09aa243495'},{date: '2023.02.15',result:'昏睡兔兔(69.0)， 悠雲葉月(10.3)， 朝倉康心(-20.0)， 抹茶冰淇淋红茶(-59.3)',link:'https://game.maj-soul.net/1/?paipu=230215-4efd0586-7660-4bf6-8e05-e3718907d8b1'},{date: '2023.02.16',result:'嘉俊1220(82.9)， 狂狮周润发(4.7)， 天才呆黑魔魔(-20.5)， Hikaru(-67.1)',link:'https://game.maj-soul.net/1/?paipu=230216-c0507879-ec29-44e5-a5f0-fd73ad20a53c'},{date: '2023.02.16',result:'天才呆黑魔魔(51.9)， 狂狮周润发(8.8)， 梦幻情怀(-19.7)， Hikaru(-41.0)',link:'https://game.maj-soul.net/1/?paipu=230216-cb2d240c-9db5-4de4-8ca8-f00494a8e8f9'},{date: '2023.02.18',result:'佐仓沙耶加(95.2)， 吃货小飞飞(18.8)， 您的橘(-42.1)， 天才麻将杏杏(-71.9)',link:'https://game.maj-soul.net/1/?paipu=230218-2239f902-d18d-46c2-ad16-75ebb5e71595'},{date: '2023.02.18',result:'越菜越要波(59.4)， 虎皮猫(8.0)， 您的橘(-23.6)， 朝倉康心(-43.8)',link:'https://game.maj-soul.net/1/?paipu=230218-b5bee1fa-40ad-41dc-9205-2f81e5104492'},{date: '2023.02.19',result:'dys雀魂部部长(55.8)， 唯有猫猫头(10.2)， 火龙果说电影(-21.4)， 日麻高启强(-44.6)',link:'https://game.maj-soul.net/1/?paipu=230219-bc2cce6c-de82-424d-a565-42b2980f441b'},{date: '2023.02.19',result:'dys雀魂部部长(72.6)， 火龙果说电影(13.7)， 唯有猫猫头(-28.0)， 日麻高启强(-58.3)',link:'https://game.maj-soul.net/1/?paipu=230219-333257ef-c15f-4367-9fed-9967ad761375'},{date: '2023.02.22',result:'四娃万岁(70.5)， 熊米熊(16.4)， pane(-32.0)， 逍遥散人(-54.9)',link:'https://game.maj-soul.net/1/?paipu=230222-264c0ca8-f67a-4c08-b249-f262fcab6e9e'},{date: '2023.02.22',result:'pane(58.9)， 朝倉康心(10.9)， 四娃万岁(-11.5)， 吃货小飞飞(-58.3)',link:'https://game.maj-soul.net/1/?paipu=230222-6fb48dc5-1251-4c23-9cdc-8f54ff34de51'},{date: '2023.02.23',result:'嘉俊1220(62.8)， 胡乱思维的猫(21.5)， C・A(-27.4)， JK杀手(-56.9)',link:'https://game.maj-soul.net/1/?paipu=230223-8f6e8545-775c-49aa-b3cb-aec0c16829fe'},{date: '2023.02.23',result:'胡乱思维的猫(58.7)， 梦幻情怀(5.9)， JK杀手(-14.4)， 悠雲葉月(-50.2)',link:'https://game.maj-soul.net/1/?paipu=230223-ea01c10e-d868-4cc9-b1ca-adcb89c806ec'},{date: '2023.02.25',result:'魔枪洛亚(50.7)， 姜姜QAQ(10.3)， 吃货小飞飞(-18.0)， 您的橘(-43.0)',link:'https://game.maj-soul.net/1/?paipu=230225-7bdce206-bf66-4ece-9755-101fc5d8ee14'},{date: '2023.02.25',result:'姜姜QAQ(83.7)， 梦幻情怀(10.2)， 虎皮猫(-30.4)， 魔枪洛亚(-63.5)',link:'https://game.maj-soul.net/1/?paipu=230225-7913ae76-4750-4af9-8a54-05c1c870ba33'},{date: '2023.02.26',result:'黒色叉腰大魔王(51.0)， 狂狮周润发(6.0)， C・A(-16.0)， 炮手酵母(-41.0)',link:'https://game.maj-soul.net/1/?paipu=230226-5e45bb4d-2549-4d29-8faf-b068f30676ba'},{date: '2023.02.26',result:'pane(56.6)， 越菜越要波(10.5)， 炮手酵母(-20.8)， 黒色叉腰大魔王(-46.3)',link:'https://game.maj-soul.net/1/?paipu=230226-b72179c6-253e-4bdd-aac4-287c83ab8808'},{date: '2023.03.01',result:'嘉俊1220(61.8)， 姜姜QAQ(14.3)， 抹茶冰淇淋红茶(-23.6)， 多肉动物(-52.5)',link:'https://game.maj-soul.net/1/?paipu=230301-9f84d7ba-8d8e-48e9-9c20-672d9f3ca441'},{date: '2023.03.01',result:'姜姜QAQ(63.2)， 白菜的可爱麻麻(4.3)， 多肉动物(-23.4)， 抹茶冰淇淋红茶(-44.1)',link:'https://game.maj-soul.net/1/?paipu=230301-f73d9cd0-4cae-4c3d-8cce-57ec59158396'},{date: '2023.03.02',result:'逍遥散人(65.7)， 呆呆的彼尔德(24.2)， JK杀手(-28.0)， 悠雲葉月(-61.9)',link:'https://game.maj-soul.net/1/?paipu=230302-3c07d9f2-372c-4a7d-b5d0-b8a80920ad17'},{date: '2023.03.02',result:'JK杀手(61.5)， 朝倉康心(17.0)， 呆呆的彼尔德(-27.8)， C・A(-50.7)',link:'https://game.maj-soul.net/1/?paipu=230302-c46a4290-8c7d-4801-b34f-5c4cb7f51ae6'},{date: '2023.03.04',result:'佐仓沙耶加(58.2)， 火龙果说电影(9.6)， 天才麻将杏杏(-20.3)， 黒色叉腰大魔王(-47.5)',link:'https://game.maj-soul.net/1/?paipu=230304-e2effb51-377e-4843-a728-c2a66b318c0b'},{date: '2023.03.04',result:'天才麻将杏杏(70.4)， 越菜越要波(23.3)， 火龙果说电影(-29.7)， Hikaru(-64.0)',link:'https://game.maj-soul.net/1/?paipu=230304-7cef5aee-ef30-4c53-96be-5124f7f11cc8'},{date: '2023.03.05',result:'胡乱思维的猫(74.2)， 昏睡兔兔(19.7)， 嘉俊1220(-28.7)， 吃货小飞飞(-65.2)',link:'https://game.maj-soul.net/1/?paipu=230305-8ce400b7-4fbc-4deb-9d6b-c49b5ee0a503'},{date: '2023.03.05',result:'熊米熊(66.8)， 您的橘(11.8)， 胡乱思维的猫(-20.5)， 昏睡兔兔(-58.1)',link:'https://game.maj-soul.net/1/?paipu=230305-e5645226-0923-473e-9faa-9f9c8f92d0b9'},{date: '2023.03.08',result:'C・A(69.0)， 吃货小飞飞(12.1)， 魔枪洛亚(-23.7)， 黒色叉腰大魔王(-57.4)',link:'https://game.maj-soul.net/1/?paipu=230308-9b8e6533-ba70-49bf-8443-ef77b4ccc994'},{date: '2023.03.08',result:'黒色叉腰大魔王(91.0)， 越菜越要波(3.5)， 多肉动物(-36.2)， 熊米熊(-58.3)',link:'https://game.maj-soul.net/1/?paipu=230308-a3acef32-27c6-4210-ac30-3555087a5cb0'},{date: '2023.03.09',result:'白菜的可爱麻麻(51.7)， 天才麻将杏杏(9.1)， 四娃万岁(-18.2)， 狂狮周润发(-42.6)',link:'https://game.maj-soul.net/1/?paipu=230309-3b50db0b-43be-4302-85cf-43286144ffa7'},{date: '2023.03.09',result:'朝倉康心(63.5)， 四娃万岁(18.3)， 白菜的可爱麻麻(-22.7)， pane(-59.1)',link:'https://game.maj-soul.net/1/?paipu=230309-4cb892cc-a3b3-4444-92e1-5d216b3a0c97'},{date: '2023.03.11',result:'嘉俊1220(63.0)， 魔枪洛亚(8.6)， 佐仓沙耶加(-18.3)， 呆呆的彼尔德(-53.3)',link:'https://game.maj-soul.net/1/?paipu=230311-043d3092-73e6-4d9b-8d4a-be8f3b894bb8'},{date: '2023.03.11',result:'梦幻情怀(52.6)， 呆呆的彼尔德(6.3)， 越菜越要波(-19.3)， 多肉动物(-39.6)',link:'https://game.maj-soul.net/1/?paipu=230311-f3931104-67fc-468e-96c9-3215ab451677'},{date: '2023.03.12',result:'炮手酵母(59.7)， 姜姜QAQ(9.2)， 熊米熊(-18.4)， 日麻高启强(-50.5)',link:'https://game.maj-soul.net/1/?paipu=230312-db031914-fc3d-4a43-b049-364d2b9e5da1'},{date: '2023.03.12',result:'炮手酵母(64.2)， 姜姜QAQ(2.3)， 日麻高启强(-21.0)， 虎皮猫(-45.5)',link:'https://game.maj-soul.net/1/?paipu=230312-fc3150d1-ef5d-4f55-8e6b-8eae43bae0e8'},{date: '2023.03.15',result:'您的橘(59.3)， JK杀手(10.4)， 逍遥散人(-20.3)， 抹茶冰淇淋红茶(-49.4)',link:'https://game.maj-soul.net/1/?paipu=230315-7bc45f54-6316-4bd5-9f2c-d17d017f8ad7'},{date: '2023.03.15',result:'天才麻将杏杏(57.1)， JK杀手(8.0)， 抹茶冰淇淋红茶(-20.5)， 您的橘(-44.6)',link:'https://game.maj-soul.net/1/?paipu=230315-bac410bf-d77f-4591-abda-1a69aef1cd97'},{date: '2023.03.16',result:'四娃万岁(82.6)， 多肉动物(6.2)， 悠雲葉月(-24.7)， pane(-64.1)',link:'https://game.maj-soul.net/1/?paipu=230316-d265f988-2027-465e-8851-fb6f56fe1e17'},{date: '2023.03.16',result:'四娃万岁(59.0)， 狂狮周润发(6.1)， 多肉动物(-19.1)， 悠雲葉月(-46.0)',link:'https://game.maj-soul.net/1/?paipu=230316-0a4e03a9-4d75-421f-914a-5c43064b1385'},],
+                playerroundData: [],
+                playerdetailData: [[8, '四娃万岁', '德云色腕豪', '4', '2', '2', '0', '8', '84', '269.1', '33.33%', '9.52%', '39.29%', '34.52%', '23.81%', '1.75'], [8, '姜姜QAQ', '德云色腕豪', '2', '6', '0', '0', '8', '95', '207.8', '25.26%', '5.26%', '41.67%', '29.47%', '23.16%', '1.75'], [4, 'dys雀魂部部长', '德云色腕豪', '2', '1', '1', '0', '4', '48', '117.2', '29.17%', '10.42%', '42.86%', '41.67%', '14.58%', '1.75'], [4, '昏睡兔兔', '德云色腕豪', '2', '1', '0', '1', '4', '57', '86.5', '31.58%', '5.26%', '44.44%', '29.82%', '26.32%', '2.0'], [6, '嘉俊1220', '初心', '4', '0', '1', '1', '6', '72', '195.6', '25.0%', '9.72%', '50.0%', '43.06%', '15.28%', '1.83'], [5, '梦幻情怀', '初心', '2', '2', '1', '0', '5', '65', '137.5', '24.62%', '6.15%', '37.5%', '43.08%', '7.69%', '1.8'], [6, '白菜的可爱麻麻', '初心', '2', '2', '1', '1', '6', '65', '45.4', '23.08%', '15.38%', '46.67%', '26.15%', '21.54%', '2.17'], [7, '您的橘', '初心', '1', '1', '2', '3', '7', '81', '-127.3', '20.99%', '9.88%', '52.94%', '34.57%', '23.46%', '3.0'], [7, '炮手酵母', '飞龙', '3', '1', '2', '1', '7', '79', '89.8', '22.78%', '8.86%', '50.0%', '39.24%', '21.52%', '2.14'], [5, '朝倉康心', '飞龙', '1', '2', '1', '1', '5', '59', '27.6', '23.73%', '11.86%', '21.43%', '30.51%', '16.95%', '2.4'], [7, '天才麻将杏杏', '飞龙', '2', '2', '1', '2', '7', '85', '-10.0', '24.71%', '9.41%', '23.81%', '31.76%', '21.18%', '2.43'], [5, '逍遥散人', '飞龙', '1', '1', '1', '2', '5', '59', '-55.1', '22.03%', '18.64%', '38.46%', '30.51%', '20.34%', '2.8'], [5, '佐仓沙耶加', '七煌Keahoarl', '2', '0', '2', '1', '5', '62', '76.3', '25.81%', '6.45%', '68.75%', '29.03%', '24.19%', '2.4'], [6, '越菜越要波', '七煌Keahoarl', '1', '3', '1', '1', '6', '72', '15.2', '20.83%', '13.89%', '26.67%', '18.06%', '18.06%', '2.33'], [7, 'C・A', '七煌Keahoarl', '2', '0', '3', '2', '7', '90', '-45.0', '16.67%', '20.0%', '40.0%', '20.0%', '20.0%', '2.71'], [6, '悠雲葉月', '七煌Keahoarl', '1', '1', '1', '3', '6', '69', '-119.8', '17.39%', '11.59%', '25.0%', '28.99%', '13.04%', '3.0'], [6, '熊米熊', '点苍', '3', '1', '1', '1', '6', '73', '151.2', '28.77%', '9.59%', '52.38%', '26.03%', '31.51%', '2.0'], [7, '吃货小飞飞', '点苍', '2', '2', '1', '2', '7', '93', '6.2', '16.13%', '13.98%', '33.33%', '22.58%', '19.35%', '2.43'], [5, '虎皮猫', '点苍', '1', '1', '2', '1', '5', '66', '-13.9', '21.21%', '10.61%', '42.86%', '36.36%', '22.73%', '2.6'], [6, '抹茶冰淇淋红茶', '点苍', '0', '0', '2', '4', '6', '73', '-255.2', '16.44%', '23.29%', '58.33%', '35.62%', '28.77%', '3.67'], [6, '狂狮周润发', '竹芒', '0', '5', '0', '1', '6', '54', '-7.7', '20.37%', '11.11%', '27.27%', '29.63%', '25.93%', '2.33'], [6, 'pane', '竹芒', '2', '1', '1', '2', '6', '71', '-21.5', '21.13%', '18.31%', '26.67%', '19.72%', '23.94%', '2.5'], [6, '火龙果说电影', '竹芒', '0', '2', '4', '0', '6', '70', '-62.0', '17.14%', '10.0%', '41.67%', '37.14%', '14.29%', '2.67'], [6, '呆呆的彼尔德', '竹芒', '0', '3', '1', '2', '6', '77', '-87.1', '24.68%', '10.39%', '47.37%', '42.86%', '15.58%', '2.83'], [6, '胡乱思维的猫', '右手第一张', '3', '1', '2', '0', '6', '70', '165.3', '22.86%', '10.0%', '56.25%', '40.0%', '15.71%', '1.83'], [6, '魔枪洛亚', '右手第一张', '1', '2', '2', '1', '6', '79', '-35.3', '18.99%', '18.99%', '33.33%', '39.24%', '20.25%', '2.5'], [4, '唯有猫猫头', '右手第一张', '0', '1', '1', '2', '4', '46', '-120.9', '17.39%', '13.04%', '62.5%', '23.91%', '26.09%', '3.25'], [8, '多肉动物', '右手第一张', '0', '1', '5', '2', '8', '99', '-218.4', '17.17%', '16.16%', '41.18%', '23.23%', '27.27%', '3.12'], [7, '黒色叉腰大魔王', '立直魔术师', '2', '1', '1', '3', '7', '86', '-13.2', '27.91%', '12.79%', '50.0%', '44.19%', '19.77%', '2.71'], [8, 'JK杀手', '立直魔术师', '1', '2', '3', '2', '8', '91', '-109.7', '18.68%', '14.29%', '52.94%', '40.66%', '12.09%', '2.75'], [6, '日麻高启强', '立直魔术师', '1', '0', '2', '3', '6', '70', '-116.5', '15.71%', '12.86%', '36.36%', '20.0%', '25.71%', '3.17'], [3, 'Hikaru', '立直魔术师', '0', '0', '0', '3', '3', '32', '-172.1', '6.25%', '37.5%', '0.0%', '34.38%', '21.88%', '4.0'], [0, 'AI', '电脑', '0', '0', '0', '0', '0', '0', '0.0', '0.0%', '0.0%', '0.0%', '0.0%', '0.0%', '0']],
+                d0:0,
+                d1:0,
+                d2:0,
+                d3:0,
+                d4:0,
+                d5:0,
+                d6:0,
+                d7:0,
+                d8:0,
+                dname:0,
+                tname:0,
+                d11:0,
+                d12:0,
+                d13:0,
+                d14:0,
+                
+                dialogTableVisible: false,
+            activeName: 'second'
+            };
+        },
+         methods: {
+            handleClick(tab, event) {
+                console.log(tab, event);
+            },
+            clickplayer(id){
+                console.log(id)
+                id=parseInt(id)
+                this.d0=this.playerdetailData[id][0]
+                this.d1=this.playerdetailData[id][8]
+                this.d2=this.playerdetailData[id][9]
+                this.d3=this.playerdetailData[id][10]
+                this.d4=this.playerdetailData[id][11]
+                this.d5=this.playerdetailData[id][12]
+                this.d6=this.playerdetailData[id][13]
+                this.d7=this.playerdetailData[id][14]
+                this.d8=this.playerdetailData[id][15]
+                this.dname=this.playerdetailData[id][1]
+                this.tname=this.playerdetailData[id][2]
+                this.d11=this.playerdetailData[id][3]
+                this.d12=this.playerdetailData[id][4]
+                this.d13=this.playerdetailData[id][5]
+                this.d14=this.playerdetailData[id][6]
+                this.gen_player_round_data(id)
+                this.dialogTableVisible=!this.dialogTableVisible
+            },
+            gen_player_round_data(id){
+                var name=this.playerdetailData[id][1]
+                var res =new Array()
+                for(i=0;i<this.roundData.length;i++){
+                    if(this.roundData[i]['result'].indexOf(name)!=-1){
+                        var split=this.roundData[i]['result'].split('，')
+                        var place=''
+                        if(split[0].indexOf(name)!=-1) place='一'
+                        if(split[1].indexOf(name)!=-1) place='二'
+                        if(split[2].indexOf(name)!=-1) place='三'
+                        if(split[3].indexOf(name)!=-1) place='四'
+                        this.roundData[i]['place']=place
+                        res.push(this.roundData[i])
+                    }
+                }
+                this.playerroundData=res
+                console.log(res[0])
+            },
+            initChart(d1,d2,d3,d4){
+                // 基于准备好的dom，初始化echarts实例
+                //console.log(this.$refs.chart)
+                let myChart = echarts.init(this.$refs['chart']);
+                
+
+                // 指定图表的配置项和数据
+                var option = {
+                    series: [
+                        {
+                        type: 'pie',
+                        label: {
+                            formatter: '{name|{b}}\n{value|{d}%}',
+                            rich: {
+                                time: {
+                                fontSize: 10,
+                                color: '#999'
+                                }
+                            }
+                        },
+                    color: ['#28A745','#17A2B8','#E5D96C','#DC3848'],
+                    data: [
+                            {value: d1,name: '一位'},
+                            {value: d2,name: '二位'},
+                            {value: d3,name: '三位'},
+                            {value: d4,name: '四位'},
+                        ],
+                        radius: '75%'
+                        }
+                    ]
+                    };
+
+                // 使用刚指定的配置项和数据显示图表。
+                myChart.setOption(option);
+            },
+            addplayerdata(){
+                for(i=0;i<this.playerData.length;i++){
+                    this.playerData[i]['cccs']=this.playerdetailData[i][7]
+                    this.playerData[i]['hpl']=this.playerdetailData[i][10].slice(0,-1)
+                    this.playerData[i]['fcl']=this.playerdetailData[i][11].slice(0,-1)
+                    this.playerData[i]['zml']=this.playerdetailData[i][12].slice(0,-1)
+                    this.playerData[i]['fll']=this.playerdetailData[i][13].slice(0,-1)
+                    this.playerData[i]['lzl']=this.playerdetailData[i][14].slice(0,-1)
+                    this.playerData[i]['pjsw']=this.playerdetailData[i][15]
+                }
+
+            },
+        },
+        created(){
+            this.addplayerdata()
+        },
+        updated () {
+            this.$nextTick(()=>{this.initChart(this.d11,this.d12,this.d13,this.d14)} )
+        },
+        
+    })
+
+
+
+
+</script>
+
+
+</body>
+
+<style>
+    .el-row {
+      margin-bottom: 20px;
+      &:last-child {
+        margin-bottom: 0;
+      }
+    }
+    .el-col {
+      border-radius: 4px;
+    }
+    .bg-purple-dark {
+      background: #99a9bf;
+    }
+    .bg-purple {
+      background: #d3dce6;
+    }
+    .bg-purple-light {
+      background: #e5e9f2;
+    }
+    .grid-content {
+      border-radius: 4px;
+      min-height: 36px;
+    }
+    .row-bg {
+      padding: 10px 0;
+      background-color: #f9fafc;
+    }
+    .css-1oney6p {
+    margin: 0px;
+    font-family: Roboto, "Microsoft YaHei", Meiryo, sans-serif;
+    font-weight: 400;
+    font-size: 1rem;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    line-height: 1.25;
+    text-align: right;
+    }
+    .css-z2oei0 {
+        margin: 0px;
+        margin-top: 0px;
+        font-family: Roboto, "Microsoft YaHei", Meiryo, sans-serif;
+        font-weight: 400;
+        font-size: 2.2267rem;
+        line-height: 1.235;
+        text-align: center;
+    }
+    .app{
+    margin: auto;
+    width: 1100px;
+    }
+    .css-saabsf {
+    margin: 0px 0px 16px;
+    margin-top: 32px;
+    margin-bottom: 0px;
+    font-family: Roboto, "Microsoft YaHei", Meiryo, sans-serif;
+    font-weight: 400;
+    font-size: 1.6867rem;
+    line-height: 1.334;
+    text-align: center;
+}
+.css-1u3q4k3 {
+    grid-template-columns: repeat(2, min-content);
+}
+
+.css-1u3q4k3, .css-1u3q4k3 * {
+    user-select: none;
+}
+
+.css-1u3q4k3 {
+    display: grid;
+    -webkit-box-pack: justify;
+    justify-content: space-between;
+    gap: 12px;
+    /*grid-template-columns: 1fr;*/
+    width: 500px;
+    margin: auto;
+    margin-top: 0px;
+}
+
+.css-gg4vpm {
+    display: flex;
+    -webkit-box-pack: justify;
+    justify-content: space-between;
+    width: 150px;
+}
+
+.css-lrbsr7 {
+    margin: 0px;
+    font-family: Roboto, "Microsoft YaHei", Meiryo, sans-serif;
+    font-weight: 700;
+    font-size: 1rem;
+    overflow: hidden;
+    white-space: nowrap;
+    line-height: 1.25;
+    text-overflow: initial;
+}
+
+  </style>
+</html>
