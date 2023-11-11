@@ -14,7 +14,7 @@ def deal_name_changes(name):
 
 def cal():
     # 出场次数	总得分	一位率	二位率	三位率	四位率  总局数  和牌率  放铳率  立直率  副露率  自摸率
-    data=[[0,0,0,0,0,0,0,0,0,0,0,0] for i in range(34)]
+    data=[[0,0,0,0,0,0,0,0,0,0,0,0] for i in range(player_number)]
 
     file_name = 'player.xlsx'
     frame=pd.read_excel(file_name)
