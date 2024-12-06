@@ -22,6 +22,8 @@
 
 每一局比赛对应着一个xlsx文件
 
+- TODO：尝试使用[mahjong_soul_api](https://github.com/MahjongRepository/mahjong_soul_api)自动获取对局
+
 ### 2.2 添加比赛信息
 
 #### 2.2.1 队伍人员信息

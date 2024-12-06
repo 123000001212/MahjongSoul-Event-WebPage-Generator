@@ -9,7 +9,7 @@ Recommended environment：
 
 ## 2. How to use
 
-### 2.1 Obtain the match information by Mahjong Soul Review Supporter
+### 2.1 Fetch the match data by Mahjong Soul Review Supporter
 
 First [install the Mahjong Soul Review Supporter plug-in](https://www.bilibili.com/read/cv17873540) in Chrome or Edge browser. (It is recommended to use the Edge browser because Chrome needs to install the tamper monkey plug-in first).
 
@@ -19,7 +19,9 @@ Save the table to ./data, name the file as "Year.Month.Day-Number.xlsx" (i.e. 20
 
 Each game corresponds to a xlsx file.
 
-### 2.2 Set game information
+- TODO：try [mahjong_soul_api](https://github.com/MahjongRepository/mahjong_soul_api) to fetch match data automatically.
+
+### 2.2 Set game configures
 
 #### 2.2.1 Team member information
 
